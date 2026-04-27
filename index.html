@@ -15,628 +15,729 @@
             width: 100%;
             height: 100%;
             background: #000;
-            overflow-y: scroll;
-            overflow-x: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            overflow-x: hidden;
         }
 
         canvas {
             display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
         }
 
-        /* ===== UI LAYERS ===== */
-        .ui-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        .scroll-content {
+            position: relative;
+            z-index: 50;
             pointer-events: none;
-            z-index: 100;
         }
 
-        .text-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .scene-section {
             width: 100%;
-            height: 100%;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            opacity: 0;
-            pointer-events: none;
+            justify-content: center;
+            position: relative;
+            flex-direction: column;
         }
 
         .scene-text {
-            font-size: 3.5rem;
+            font-size: clamp(2rem, 8vw, 4.5rem);
             font-weight: 300;
-            letter-spacing: 0.02em;
-            line-height: 1.2;
-            color: #fff;
-            max-width: 80%;
+            letter-spacing: 0.03em;
+            color: rgba(255, 255, 255, 0.95);
             text-transform: uppercase;
+            text-align: center;
+            max-width: 90%;
+            opacity: 0;
+            animation: fadeInText 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
 
         .scene-subtext {
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
             font-weight: 300;
             letter-spacing: 0.15em;
-            margin-top: 2rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        /* Glassmorphism cards */
-        .glass-card {
-            position: fixed;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-top: 1.5rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
             opacity: 0;
-            pointer-events: none;
-            z-index: 101;
+            animation: fadeInText 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
         }
 
-        .glass-card h2 {
+        @keyframes fadeInText {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass-panel {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 500px;
+            opacity: 0;
+            animation: slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass-panel h2 {
             font-size: 1.8rem;
             font-weight: 500;
             margin-bottom: 1rem;
             letter-spacing: 0.05em;
+            color: #fff;
         }
 
-        .glass-card p {
-            font-size: 0.95rem;
-            line-height: 1.6;
+        .glass-panel p {
+            font-size: 1rem;
+            line-height: 1.7;
             color: rgba(255, 255, 255, 0.7);
             font-weight: 300;
         }
 
-        /* Scroll progress indicator */
         .scroll-indicator {
             position: fixed;
             bottom: 2rem;
             left: 2rem;
             width: 2px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 1px;
-            overflow: hidden;
-            z-index: 200;
-            pointer-events: none;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 300;
+            border-radius: 2px;
         }
 
-        .scroll-progress {
+        .scroll-indicator-fill {
             width: 100%;
             height: 0%;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 1px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 2px;
+            transition: height 0.15s ease-out;
         }
 
-        /* Scroll sections for scroll height */
-        .scroll-spacer {
-            position: relative;
-            width: 100%;
-            min-height: 500vh;
-            pointer-events: none;
-            z-index: -1;
-        }
+        /* Section-specific styles */
+        .section-1 { padding: 200vh 0 100vh 0; }
+        .section-2 { padding: 100vh 0; }
+        .section-3 { padding: 100vh 0; }
+        .section-4 { padding: 100vh 0; }
+        .section-5 { padding: 100vh 0; }
     </style>
 </head>
 <body>
+    <!-- Three.js Canvas (Fixed Background) -->
     <canvas id="canvas"></canvas>
 
-    <div class="ui-overlay">
-        <div class="text-layer" id="scene1">
+    <!-- Scrollable Content -->
+    <div class="scroll-content">
+        <!-- Section 1: Deep Space -->
+        <div class="scene-section section-1">
             <div class="scene-text">Deep Space</div>
-            <div class="scene-subtext">The beginning of everything</div>
+            <div class="scene-subtext">A journey begins in the void</div>
         </div>
 
-        <div class="text-layer" id="scene2">
+        <!-- Section 2: Approach -->
+        <div class="scene-section section-2">
             <div class="scene-text">Approach</div>
             <div class="scene-subtext">Watch as Earth emerges from darkness</div>
         </div>
 
-        <div class="text-layer" id="scene3">
+        <!-- Section 3: Orbit -->
+        <div class="scene-section section-3">
             <div class="scene-text">Orbit</div>
-            <div class="scene-subtext">Experience our home from above</div>
+            <div class="scene-subtext">Experience our world from above</div>
         </div>
 
-        <div class="text-layer" id="scene4">
-            <div class="scene-text">Global Connection</div>
-            <div class="scene-subtext">Networks spanning the world</div>
+        <!-- Section 4: Global Network -->
+        <div class="scene-section section-4">
+            <div class="scene-text">Connected</div>
+            <div class="scene-subtext">Global systems spanning continents</div>
         </div>
 
-        <div class="glass-card" id="card1" style="bottom: 5rem; left: 5rem; width: 380px;">
-            <h2>Explore</h2>
-            <p>Journey through our planet's beauty and understand the intricate systems that connect us all.</p>
+        <!-- Section 5: UI Transition -->
+        <div class="scene-section section-5">
+            <div class="glass-panel">
+                <h2>Explore Earth</h2>
+                <p>Journey through our planet's beauty and understand the intricate systems that connect us all. From deep space to intimate detail.</p>
+            </div>
         </div>
     </div>
 
+    <!-- Scroll Indicator -->
     <div class="scroll-indicator">
-        <div class="scroll-progress"></div>
+        <div class="scroll-indicator-fill"></div>
     </div>
 
-    <!-- Scroll spacer -->
-    <div class="scroll-spacer"></div>
-
-    <!-- Three.js CDN -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- GSAP CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
-        // ========================================
-        // PREMIUM SCROLL-DRIVEN 3D EARTH EXPERIENCE
-        // ========================================
+        // ================================================
+        // PREMIUM CINEMATIC EARTH SCROLL EXPERIENCE
+        // ================================================
 
-        // ===== CONFIGURATION =====
-        const CONFIG = {
-            motionSmoothing: 0.12,
-            cursorInfluence: 0.08,
-            scenes: {
-                duration: 100,
-                total: 5
-            }
-        };
-
-        // ===== MOTION STATE (3-LAYER SYSTEM) =====
-        const motionState = {
-            scrollProgress: 0,
-            targetCameraPos: { x: 0, y: 0, z: 3 },
-            targetCameraRot: { x: 0, y: 0 },
-            targetEarthRot: { x: 0, y: 0 },
-            currentCameraPos: { x: 0, y: 0, z: 3 },
-            currentCameraRot: { x: 0, y: 0 },
-            currentEarthRot: { x: 0, y: 0 },
-            cursorPos: { x: 0, y: 0 },
-            networkOpacity: 0
-        };
-
-        // ===== DOM ELEMENT CACHE =====
-        const domElements = {
-            scenes: {
-                scene1: document.getElementById('scene1'),
-                scene2: document.getElementById('scene2'),
-                scene3: document.getElementById('scene3'),
-                scene4: document.getElementById('scene4')
-            },
-            cards: {
-                card1: document.getElementById('card1')
-            },
-            scrollProgress: document.querySelector('.scroll-progress')
-        };
-
-        // ===== THREE.JS SETUP =====
-        const canvas = document.getElementById('canvas');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000);
-        scene.fog = new THREE.FogExp2(0x000000, 0.0008);
-
-        const camera = new THREE.PerspectiveCamera(
-            65,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            10000
-        );
-        camera.position.set(0, 0, 3);
-
-        const renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            antialias: true,
-            alpha: true,
-            powerPreference: 'high-performance'
-        });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-
-        // ===== CREATE STARFIELD =====
-        function createStarfield() {
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsMaterial = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: 0.08,
-                sizeAttenuation: true,
-                transparent: true,
-                opacity: 0.8
-            });
-
-            const starsVertices = [];
-            for (let i = 0; i < 3000; i++) {
-                const x = (Math.random() - 0.5) * 200;
-                const y = (Math.random() - 0.5) * 200;
-                const z = (Math.random() - 0.5) * 200;
-                starsVertices.push(x, y, z);
+        class EarthExperience {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.scrollIndicator = document.querySelector('.scroll-indicator-fill');
+                this.setupScene();
+                this.setupEarth();
+                this.setupLighting();
+                this.setupNetwork();
+                this.setupScroll();
+                this.animate();
+                this.setupResize();
             }
 
-            starsGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starsVertices), 3));
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
-            scene.add(stars);
-            return stars;
-        }
+            setupScene() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x000000);
+                this.scene.fog = new THREE.FogExp2(0x000000, 0.0008);
 
-        const stars = createStarfield();
+                this.camera = new THREE.PerspectiveCamera(
+                    60,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    10000
+                );
+                this.camera.position.set(0, 0, 2.5);
 
-        // ===== CREATE EARTH =====
-        function createEarth() {
-            const geometry = new THREE.SphereGeometry(1, 64, 64);
-
-            // Create canvas texture for Earth
-            const textureCanvas = document.createElement('canvas');
-            textureCanvas.width = 2048;
-            textureCanvas.height = 1024;
-            const ctx = textureCanvas.getContext('2d');
-
-            // Gradient background (oceans)
-            const gradient = ctx.createLinearGradient(0, 0, textureCanvas.width, textureCanvas.height);
-            gradient.addColorStop(0, '#1a4d7a');
-            gradient.addColorStop(0.5, '#0d2a47');
-            gradient.addColorStop(1, '#1a4d7a');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
-
-            // Add continents (simplified)
-            ctx.fillStyle = '#2d5016';
-            for (let i = 0; i < 100; i++) {
-                const x = Math.random() * textureCanvas.width;
-                const y = Math.random() * textureCanvas.height;
-                const size = Math.random() * 100 + 30;
-                ctx.fillRect(x, y, size, size * 0.6);
-            }
-
-            const texture = new THREE.CanvasTexture(textureCanvas);
-            texture.magFilter = THREE.LinearFilter;
-            texture.minFilter = THREE.LinearMipmapLinearFilter;
-
-            const material = new THREE.MeshPhongMaterial({
-                map: texture,
-                shininess: 10,
-                wireframe: false
-            });
-
-            const earth = new THREE.Mesh(geometry, material);
-            earth.castShadow = true;
-            earth.receiveShadow = true;
-            scene.add(earth);
-
-            // Cloud layer
-            const cloudGeometry = new THREE.SphereGeometry(1.01, 64, 64);
-            const cloudCanvas = document.createElement('canvas');
-            cloudCanvas.width = 2048;
-            cloudCanvas.height = 1024;
-            const cloudCtx = cloudCanvas.getContext('2d');
-            cloudCtx.fillStyle = 'rgba(255, 255, 255, 0)';
-            cloudCtx.fillRect(0, 0, cloudCanvas.width, cloudCanvas.height);
-
-            cloudCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            for (let i = 0; i < 80; i++) {
-                const x = Math.random() * cloudCanvas.width;
-                const y = Math.random() * cloudCanvas.height;
-                const size = Math.random() * 200 + 100;
-                cloudCtx.beginPath();
-                cloudCtx.ellipse(x, y, size, size * 0.5, Math.random() * Math.PI, 0, Math.PI * 2);
-                cloudCtx.fill();
-            }
-
-            const cloudTexture = new THREE.CanvasTexture(cloudCanvas);
-            const cloudMaterial = new THREE.MeshPhongMaterial({
-                map: cloudTexture,
-                transparent: true,
-                opacity: 0.4,
-                emissive: 0x111111
-            });
-
-            const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
-            earth.add(clouds);
-
-            // Atmosphere glow
-            const atmosphereGeometry = new THREE.SphereGeometry(1.05, 64, 64);
-            const atmosphereMaterial = new THREE.MeshBasicMaterial({
-                color: 0x4da6ff,
-                transparent: true,
-                opacity: 0.15,
-                side: THREE.BackSide
-            });
-            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-            earth.add(atmosphere);
-
-            return earth;
-        }
-
-        const earth = createEarth();
-
-        // ===== CREATE LIGHTING =====
-        function createLighting() {
-            const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-            sunLight.position.set(5, 3, 5);
-            sunLight.castShadow = true;
-            sunLight.shadow.mapSize.width = 2048;
-            sunLight.shadow.mapSize.height = 2048;
-            scene.add(sunLight);
-
-            const fillLight = new THREE.DirectionalLight(0x4da6ff, 0.3);
-            fillLight.position.set(-5, -3, -5);
-            scene.add(fillLight);
-
-            const ambientLight = new THREE.AmbientLight(0x333366, 0.4);
-            scene.add(ambientLight);
-        }
-
-        createLighting();
-
-        // ===== CREATE CITY NETWORK NODES =====
-        function createNetworkNodes() {
-            const nodesGroup = new THREE.Group();
-
-            const cities = [
-                { name: 'New York', lat: 40.7128, lng: -74.0060 },
-                { name: 'London', lat: 51.5074, lng: -0.1278 },
-                { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
-                { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
-                { name: 'Dubai', lat: 25.2048, lng: 55.2708 },
-                { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
-                { name: 'São Paulo', lat: -23.5505, lng: -46.6333 }
-            ];
-
-            cities.forEach((city) => {
-                const lat = city.lat * Math.PI / 180;
-                const lng = city.lng * Math.PI / 180;
-                const radius = 1.05;
-
-                const x = radius * Math.cos(lat) * Math.cos(lng);
-                const y = radius * Math.sin(lat);
-                const z = radius * Math.cos(lat) * Math.sin(lng);
-
-                // Glowing point
-                const pointGeometry = new THREE.SphereGeometry(0.03, 16, 16);
-                const pointMaterial = new THREE.MeshPhongMaterial({
-                    color: 0x4da6ff,
-                    emissive: 0x4da6ff,
-                    shininess: 100
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: this.canvas,
+                    antialias: true,
+                    alpha: true,
+                    precision: 'highp',
+                    powerPreference: 'high-performance'
                 });
-                const point = new THREE.Mesh(pointGeometry, pointMaterial);
-                point.position.set(x, y, z);
-                nodesGroup.add(point);
 
-                // Glow halo
-                const haloGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-                const haloMaterial = new THREE.MeshBasicMaterial({
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+                this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                this.renderer.toneMappingExposure = 0.8;
+
+                // Motion state
+                this.motion = {
+                    scrollProgress: 0,
+                    targetPos: { x: 0, y: 0, z: 2.5 },
+                    targetRot: { x: 0, y: 0 },
+                    currentPos: { x: 0, y: 0, z: 2.5 },
+                    currentRot: { x: 0, y: 0 },
+                    earthRot: { x: 0, y: 0 },
+                    targetEarthRot: { x: 0, y: 0 },
+                    mouseX: 0,
+                    mouseY: 0
+                };
+            }
+
+            setupEarth() {
+                // High quality Earth with proper textures
+                const earthGroup = new THREE.Group();
+
+                // Sphere geometry
+                const geometry = new THREE.SphereGeometry(1, 128, 128);
+
+                // Earth texture (procedurally generated, realistic)
+                const canvas = this.createEarthTexture();
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.magFilter = THREE.LinearFilter;
+                texture.minFilter = THREE.LinearMipmapLinearFilter;
+                texture.anisotropy = this.renderer.capabilities.maxAnisotropy;
+
+                const material = new THREE.MeshPhongMaterial({
+                    map: texture,
+                    shininess: 15,
+                    emissiveIntensity: 0.1,
+                    wireframe: false
+                });
+
+                this.earth = new THREE.Mesh(geometry, material);
+                this.earth.castShadow = true;
+                this.earth.receiveShadow = true;
+                earthGroup.add(this.earth);
+
+                // Cloud layer
+                const cloudGeometry = new THREE.SphereGeometry(1.015, 128, 128);
+                const cloudTexture = this.createCloudTexture();
+                const cloudMaterial = new THREE.MeshPhongMaterial({
+                    map: cloudTexture,
+                    transparent: true,
+                    opacity: 0.4,
+                    emissive: 0xffffff,
+                    emissiveIntensity: 0.05,
+                    shininess: 0
+                });
+                this.clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
+                earthGroup.add(this.clouds);
+
+                // Atmosphere - outer glow
+                const atmGeometry = new THREE.SphereGeometry(1.05, 128, 128);
+                const atmMaterial = new THREE.MeshBasicMaterial({
                     color: 0x4da6ff,
                     transparent: true,
-                    opacity: 0.3
+                    opacity: 0.2,
+                    side: THREE.BackSide
                 });
-                const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+                const atmosphere = new THREE.Mesh(atmGeometry, atmMaterial);
+                earthGroup.add(atmosphere);
+
+                // Atmosphere - inner rim
+                const rimGeometry = new THREE.SphereGeometry(1.01, 128, 128);
+                const rimMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        color: { value: new THREE.Color(0x4da6ff) }
+                    },
+                    vertexShader: `
+                        varying vec3 vNormal;
+                        varying vec3 vPosition;
+                        void main() {
+                            vNormal = normalize(normalMatrix * normal);
+                            vPosition = normalize((modelMatrix * vec4(position, 1.0)).xyz);
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform vec3 color;
+                        varying vec3 vNormal;
+                        varying vec3 vPosition;
+                        void main() {
+                            float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0, 0, 1))), 3.0);
+                            gl_FragColor = vec4(color, fresnel * 0.3);
+                        }
+                    `,
+                    transparent: true,
+                    side: THREE.FrontSide
+                });
+                const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+                earthGroup.add(rim);
+
+                this.scene.add(earthGroup);
+            }
+
+            createEarthTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 4096;
+                canvas.height = 2048;
+                const ctx = canvas.getContext('2d');
+
+                // Ocean base
+                const oceanGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                oceanGradient.addColorStop(0, '#0a1f2e');
+                oceanGradient.addColorStop(0.25, '#0d2a47');
+                oceanGradient.addColorStop(0.5, '#0f3a5c');
+                oceanGradient.addColorStop(0.75, '#0d2a47');
+                oceanGradient.addColorStop(1, '#0a1f2e');
+                ctx.fillStyle = oceanGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Continents - more realistic landmass distribution
+                ctx.fillStyle = '#1a4d1a';
+                // North America
+                this.drawLandmass(ctx, 800, 600, 600, 500);
+                // South America
+                this.drawLandmass(ctx, 1200, 900, 300, 400);
+                // Europe/Africa
+                this.drawLandmass(ctx, 2000, 700, 700, 600);
+                // Asia
+                this.drawLandmass(ctx, 2800, 500, 900, 700);
+                // Australia
+                this.drawLandmass(ctx, 3200, 1000, 250, 250);
+
+                // Add some variation and detail
+                ctx.fillStyle = '#2d6b2d';
+                for (let i = 0; i < 200; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const size = Math.random() * 80 + 20;
+                    ctx.fillRect(x, y, size, size * 0.4);
+                }
+
+                // Subtle shading
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                ctx.fillRect(0, canvas.height * 0.4, canvas.width, canvas.height * 0.2);
+
+                return canvas;
+            }
+
+            drawLandmass(ctx, x, y, width, height) {
+                ctx.beginPath();
+                ctx.ellipse(x, y, width, height, Math.random() * Math.PI, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Add smaller islands
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    const ix = x + (Math.random() - 0.5) * width * 2;
+                    const iy = y + (Math.random() - 0.5) * height * 2;
+                    const isize = (Math.random() * 50 + 20);
+                    ctx.ellipse(ix, iy, isize, isize * 0.6, Math.random() * Math.PI, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            createCloudTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 2048;
+                canvas.height = 1024;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Perlin-like cloud patterns
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                for (let i = 0; i < 120; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const size = Math.random() * 300 + 150;
+                    const opacity = Math.random() * 0.4 + 0.1;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                    ctx.beginPath();
+                    ctx.ellipse(x, y, size, size * 0.4, Math.random() * Math.PI, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                return canvas;
+            }
+
+            setupLighting() {
+                // Main sun light
+                const sunLight = new THREE.DirectionalLight(0xffffff, 1.3);
+                sunLight.position.set(8, 5, 8);
+                sunLight.castShadow = true;
+                sunLight.shadow.mapSize.width = 4096;
+                sunLight.shadow.mapSize.height = 4096;
+                sunLight.shadow.camera.near = 0.1;
+                sunLight.shadow.camera.far = 100;
+                sunLight.shadow.camera.left = -5;
+                sunLight.shadow.camera.right = 5;
+                sunLight.shadow.camera.top = 5;
+                sunLight.shadow.camera.bottom = -5;
+                sunLight.shadow.bias = -0.001;
+                this.scene.add(sunLight);
+
+                // Fill light
+                const fillLight = new THREE.DirectionalLight(0x4da6ff, 0.4);
+                fillLight.position.set(-8, -3, -8);
+                this.scene.add(fillLight);
+
+                // Ambient light
+                const ambientLight = new THREE.AmbientLight(0x667799, 0.5);
+                this.scene.add(ambientLight);
+            }
+
+            setupNetwork() {
+                this.networkGroup = new THREE.Group();
+
+                const cities = [
+                    { lat: 40.7128, lng: -74.0060 }, // NYC
+                    { lat: 51.5074, lng: -0.1278 },   // London
+                    { lat: 35.6762, lng: 139.6503 },  // Tokyo
+                    { lat: -33.8688, lng: 151.2093 }, // Sydney
+                    { lat: 25.2048, lng: 55.2708 },   // Dubai
+                    { lat: 1.3521, lng: 103.8198 },   // Singapore
+                    { lat: -23.5505, lng: -46.6333 }  // São Paulo
+                ];
+
+                // Create nodes
+                cities.forEach(city => {
+                    const point = this.createCityPoint(city.lat, city.lng);
+                    this.networkGroup.add(point);
+                });
+
+                // Create connections
+                for (let i = 0; i < cities.length; i++) {
+                    for (let j = i + 1; j < cities.length; j++) {
+                        if (Math.random() > 0.5) {
+                            const line = this.createConnectionLine(
+                                cities[i].lat, cities[i].lng,
+                                cities[j].lat, cities[j].lng
+                            );
+                            this.networkGroup.add(line);
+                        }
+                    }
+                }
+
+                this.earth.add(this.networkGroup);
+                this.networkOpacity = 0;
+            }
+
+            createCityPoint(lat, lng) {
+                const group = new THREE.Group();
+
+                // Convert lat/lng to 3D position
+                const latRad = lat * Math.PI / 180;
+                const lngRad = lng * Math.PI / 180;
+                const radius = 1.02;
+
+                const x = radius * Math.cos(latRad) * Math.cos(lngRad);
+                const y = radius * Math.sin(latRad);
+                const z = radius * Math.cos(latRad) * Math.sin(lngRad);
+
+                // Point
+                const pointGeo = new THREE.SphereGeometry(0.025, 16, 16);
+                const pointMat = new THREE.MeshPhongMaterial({
+                    color: 0x4da6ff,
+                    emissive: 0x2d7fd9,
+                    shininess: 100
+                });
+                const point = new THREE.Mesh(pointGeo, pointMat);
+                point.position.set(x, y, z);
+                group.add(point);
+
+                // Halo
+                const haloGeo = new THREE.SphereGeometry(0.08, 16, 16);
+                const haloMat = new THREE.MeshBasicMaterial({
+                    color: 0x4da6ff,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const halo = new THREE.Mesh(haloGeo, haloMat);
                 halo.position.copy(point.position);
-                nodesGroup.add(halo);
-            });
+                group.add(halo);
 
-            // Connection lines
-            const linesGroup = new THREE.Group();
-            for (let i = 0; i < cities.length; i++) {
-                for (let j = i + 1; j < cities.length; j++) {
-                    if (Math.random() > 0.6) continue;
+                return group;
+            }
 
-                    const city1 = cities[i];
-                    const city2 = cities[j];
+            createConnectionLine(lat1, lng1, lat2, lng2) {
+                const latRad1 = lat1 * Math.PI / 180;
+                const lngRad1 = lng1 * Math.PI / 180;
+                const latRad2 = lat2 * Math.PI / 180;
+                const lngRad2 = lng2 * Math.PI / 180;
+                const radius = 1.02;
 
-                    const lat1 = city1.lat * Math.PI / 180;
-                    const lng1 = city1.lng * Math.PI / 180;
-                    const radius = 1.05;
+                const x1 = radius * Math.cos(latRad1) * Math.cos(lngRad1);
+                const y1 = radius * Math.sin(latRad1);
+                const z1 = radius * Math.cos(latRad1) * Math.sin(lngRad1);
 
-                    const x1 = radius * Math.cos(lat1) * Math.cos(lng1);
-                    const y1 = radius * Math.sin(lat1);
-                    const z1 = radius * Math.cos(lat1) * Math.sin(lng1);
+                const x2 = radius * Math.cos(latRad2) * Math.cos(lngRad2);
+                const y2 = radius * Math.sin(latRad2);
+                const z2 = radius * Math.cos(latRad2) * Math.sin(lngRad2);
 
-                    const lat2 = city2.lat * Math.PI / 180;
-                    const lng2 = city2.lng * Math.PI / 180;
+                const lineGeo = new THREE.BufferGeometry();
+                lineGeo.setAttribute('position', new THREE.BufferAttribute(
+                    new Float32Array([x1, y1, z1, x2, y2, z2]), 3
+                ));
 
-                    const x2 = radius * Math.cos(lat2) * Math.cos(lng2);
-                    const y2 = radius * Math.sin(lat2);
-                    const z2 = radius * Math.cos(lat2) * Math.sin(lng2);
+                const lineMat = new THREE.LineBasicMaterial({
+                    color: 0x4da6ff,
+                    transparent: true,
+                    opacity: 0.15,
+                    linewidth: 1
+                });
 
-                    const lineGeometry = new THREE.BufferGeometry();
-                    lineGeometry.setAttribute('position', new THREE.BufferAttribute(
-                        new Float32Array([x1, y1, z1, x2, y2, z2]), 3
-                    ));
+                return new THREE.Line(lineGeo, lineMat);
+            }
 
-                    const lineMaterial = new THREE.LineBasicMaterial({
-                        color: 0x4da6ff,
-                        transparent: true,
-                        opacity: 0.2,
-                        linewidth: 1
-                    });
+            setupStars() {
+                const starsGeo = new THREE.BufferGeometry();
+                const starsMat = new THREE.PointsMaterial({
+                    color: 0xffffff,
+                    size: 0.1,
+                    sizeAttenuation: true,
+                    transparent: true,
+                    opacity: 0.8
+                });
 
-                    const line = new THREE.Line(lineGeometry, lineMaterial);
-                    linesGroup.add(line);
+                const starsVertices = [];
+                for (let i = 0; i < 5000; i++) {
+                    const x = (Math.random() - 0.5) * 300;
+                    const y = (Math.random() - 0.5) * 300;
+                    const z = (Math.random() - 0.5) * 300;
+                    starsVertices.push(x, y, z);
+                }
+
+                starsGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starsVertices), 3));
+                this.stars = new THREE.Points(starsGeo, starsMat);
+                this.scene.add(this.stars);
+            }
+
+            setupScroll() {
+                this.setupStars();
+                window.addEventListener('scroll', () => this.onScroll());
+                window.addEventListener('mousemove', (e) => this.onMouseMove(e));
+            }
+
+            onScroll() {
+                const totalHeight = document.body.scrollHeight - window.innerHeight;
+                const scrolled = window.scrollY;
+                this.motion.scrollProgress = totalHeight > 0 ? scrolled / totalHeight : 0;
+
+                // Update scroll indicator
+                this.scrollIndicator.style.height = (this.motion.scrollProgress * 100) + '%';
+
+                const p = this.motion.scrollProgress;
+
+                if (p < 0.2) {
+                    // Scene 1: Deep Space
+                    const sceneP = p / 0.2;
+                    this.motion.targetPos.z = 3.5;
+                    this.motion.targetPos.y = 0;
+                    this.motion.targetRot.x = 0;
+                    this.motion.targetEarthRot.y = sceneP * 0.3;
+                    this.networkOpacity = 0;
+                    this.earth.scale.set(1, 1, 1);
+                } else if (p < 0.4) {
+                    // Scene 2: Approach
+                    const sceneP = (p - 0.2) / 0.2;
+                    this.motion.targetPos.z = 3.5 - sceneP * 2.2;
+                    this.motion.targetPos.y = sceneP * 0.4;
+                    this.motion.targetRot.x = sceneP * 0.2;
+                    this.motion.targetEarthRot.y = 0.3 + sceneP * 0.4;
+                    this.networkOpacity = 0;
+                    this.earth.scale.set(1, 1, 1);
+                } else if (p < 0.6) {
+                    // Scene 3: Orbit
+                    const sceneP = (p - 0.4) / 0.2;
+                    const orbitAngle = sceneP * Math.PI * 2;
+                    this.motion.targetPos.z = 1.8 + Math.cos(orbitAngle) * 0.4;
+                    this.motion.targetPos.y = Math.sin(orbitAngle) * 0.5;
+                    this.motion.targetRot.x = sceneP * 0.3;
+                    this.motion.targetEarthRot.y = 0.7 + sceneP * 0.8;
+                    this.networkOpacity = 0;
+                    this.earth.scale.set(1, 1, 1);
+                } else if (p < 0.8) {
+                    // Scene 4: Network
+                    const sceneP = (p - 0.6) / 0.2;
+                    this.motion.targetPos.z = 2.3;
+                    this.motion.targetPos.y = 0;
+                    this.motion.targetRot.x = sceneP * 0.15;
+                    this.motion.targetEarthRot.y = 1.5 + sceneP * 0.5;
+                    this.networkOpacity = sceneP;
+                    this.earth.scale.set(1, 1, 1);
+                } else {
+                    // Scene 5: UI
+                    const sceneP = (p - 0.8) / 0.2;
+                    this.motion.targetPos.z = 2.3 + sceneP * 1.2;
+                    this.motion.targetRot.x = sceneP * 0.2;
+                    this.motion.targetEarthRot.y = 2.0 + sceneP * 0.3;
+                    this.networkOpacity = 1 - sceneP * 0.6;
+                    this.earth.scale.set(1 - sceneP * 0.35, 1 - sceneP * 0.35, 1 - sceneP * 0.35);
                 }
             }
 
-            nodesGroup.add(linesGroup);
-            earth.add(nodesGroup);
-            return nodesGroup;
-        }
-
-        const networkNodes = createNetworkNodes();
-
-        // ===== LERP UTILITY =====
-        function lerp(a, b, t) {
-            return a + (b - a) * Math.max(0, Math.min(1, t));
-        }
-
-        function lerpVec3(v, target, t) {
-            v.x = lerp(v.x, target.x, t);
-            v.y = lerp(v.y, target.y, t);
-            v.z = lerp(v.z, target.z, t);
-        }
-
-        function lerpVec2(v, target, t) {
-            v.x = lerp(v.x, target.x, t);
-            v.y = lerp(v.y, target.y, t);
-        }
-
-        // ===== SCROLL AND CAMERA CONTROL =====
-        function updateSceneFromScroll() {
-            const totalHeight = document.body.scrollHeight - window.innerHeight;
-            const scrolled = window.scrollY;
-            motionState.scrollProgress = Math.max(0, Math.min(1, totalHeight > 0 ? scrolled / totalHeight : 0));
-
-            const progress = motionState.scrollProgress;
-
-            if (progress < 0.2) {
-                // SCENE 1: Deep Space
-                const sceneProgress = progress / 0.2;
-                motionState.targetCameraPos.z = 3.5;
-                motionState.targetCameraPos.y = 0;
-                motionState.targetCameraRot.x = 0;
-                motionState.targetEarthRot.y = sceneProgress * 0.2;
-                motionState.networkOpacity = 0;
-                earth.scale.set(1, 1, 1);
-                updateTextLayer('scene1', sceneProgress);
-            } else if (progress < 0.4) {
-                // SCENE 2: Approach
-                const sceneProgress = (progress - 0.2) / 0.2;
-                motionState.targetCameraPos.z = 3.5 - sceneProgress * 2;
-                motionState.targetCameraPos.y = sceneProgress * 0.3;
-                motionState.targetCameraRot.x = sceneProgress * 0.15;
-                motionState.targetEarthRot.y = 0.2 + sceneProgress * 0.3;
-                motionState.networkOpacity = 0;
-                earth.scale.set(1, 1, 1);
-                updateTextLayer('scene2', sceneProgress);
-            } else if (progress < 0.6) {
-                // SCENE 3: Orbit
-                const sceneProgress = (progress - 0.4) / 0.2;
-                const orbitAngle = sceneProgress * Math.PI * 2;
-                motionState.targetCameraPos.z = 1.8 + Math.cos(orbitAngle) * 0.3;
-                motionState.targetCameraPos.y = Math.sin(orbitAngle) * 0.4;
-                motionState.targetCameraRot.x = sceneProgress * 0.2;
-                motionState.targetEarthRot.y = 0.5 + sceneProgress * 0.5;
-                motionState.networkOpacity = 0;
-                earth.scale.set(1, 1, 1);
-                updateTextLayer('scene3', sceneProgress);
-            } else if (progress < 0.8) {
-                // SCENE 4: Global Data
-                const sceneProgress = (progress - 0.6) / 0.2;
-                motionState.targetCameraPos.z = 2.2;
-                motionState.targetCameraPos.y = 0;
-                motionState.targetCameraRot.x = sceneProgress * 0.1;
-                motionState.targetEarthRot.y = 1.0 + sceneProgress * 0.3;
-                motionState.networkOpacity = sceneProgress;
-                earth.scale.set(1, 1, 1);
-                updateTextLayer('scene4', sceneProgress);
-            } else {
-                // SCENE 5: UI Transition
-                const sceneProgress = (progress - 0.8) / 0.2;
-                motionState.targetCameraPos.z = 2.2 + sceneProgress * 1;
-                motionState.targetCameraRot.x = sceneProgress * 0.15;
-                motionState.targetEarthRot.y = 1.3 + sceneProgress * 0.2;
-                motionState.networkOpacity = 1 - sceneProgress * 0.5;
-                earth.scale.set(1 - sceneProgress * 0.3, 1 - sceneProgress * 0.3, 1 - sceneProgress * 0.3);
-                updateGlassCard('card1', sceneProgress);
+            onMouseMove(e) {
+                this.motion.mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+                this.motion.mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
             }
 
-            // Update scroll indicator
-            if (domElements.scrollProgress) {
-                domElements.scrollProgress.style.height = (progress * 100) + '%';
+            lerp(a, b, t) {
+                return a + (b - a) * Math.max(0, Math.min(1, t));
+            }
+
+            lerpVec(v, target, t) {
+                v.x = this.lerp(v.x, target.x, t);
+                v.y = this.lerp(v.y, target.y, t);
+                v.z = this.lerp(v.z, target.z, t);
+            }
+
+            lerpVec2(v, target, t) {
+                v.x = this.lerp(v.x, target.x, t);
+                v.y = this.lerp(v.y, target.y, t);
+            }
+
+            animate = () => {
+                requestAnimationFrame(this.animate);
+
+                // Smooth motion interpolation (3-layer system)
+                const smoothing = 0.08;
+                this.lerpVec(this.motion.currentPos, this.motion.targetPos, smoothing);
+                this.lerpVec2(this.motion.currentRot, this.motion.targetRot, smoothing);
+
+                // Apply subtle cursor influence
+                this.motion.currentPos.x = this.lerp(
+                    this.motion.currentPos.x,
+                    this.motion.targetPos.x + this.motion.mouseX * 0.1,
+                    0.1
+                );
+                this.motion.currentPos.y = this.lerp(
+                    this.motion.currentPos.y,
+                    this.motion.targetPos.y + this.motion.mouseY * 0.1,
+                    0.1
+                );
+
+                // Update camera
+                this.camera.position.copy(this.motion.currentPos);
+                this.camera.rotation.order = 'YXZ';
+                this.camera.rotation.x = this.motion.currentRot.x;
+                this.camera.rotation.y = this.motion.currentRot.y;
+                this.camera.lookAt(this.earth.position);
+
+                // Update Earth rotation
+                this.motion.earthRot.y = this.lerp(
+                    this.motion.earthRot.y,
+                    this.motion.targetEarthRot.y,
+                    smoothing
+                );
+                this.earth.rotation.y = this.motion.earthRot.y;
+                this.earth.rotation.x = this.motion.currentRot.x * 0.2;
+
+                // Update network visibility
+                this.networkGroup.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = this.lerp(
+                            child.material.opacity || 0,
+                            this.networkOpacity * 0.25,
+                            smoothing
+                        );
+                    }
+                });
+
+                // Subtle star parallax
+                this.stars.rotation.x += 0.00002;
+                this.stars.rotation.y += 0.00015;
+
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            setupResize() {
+                window.addEventListener('resize', () => {
+                    const width = window.innerWidth;
+                    const height = window.innerHeight;
+
+                    this.camera.aspect = width / height;
+                    this.camera.updateProjectionMatrix();
+
+                    this.renderer.setSize(width, height);
+                    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                });
             }
         }
 
-        // ===== TEXT LAYER MANAGEMENT =====
-        function updateTextLayer(id, progress) {
-            const layer = domElements.scenes[id];
-            if (!layer) return;
-
-            const ease = progress < 0.5 ? progress * 2 : 2 - progress * 2;
-            layer.style.opacity = Math.sin(ease * Math.PI) * 0.95;
-        }
-
-        function updateGlassCard(id, progress) {
-            const card = domElements.cards[id];
-            if (!card) return;
-
-            card.style.opacity = Math.max(0, Math.min(1, progress * 2));
-            card.style.transform = `translateY(${(1 - progress) * 20}px)`;
-        }
-
-        // ===== CURSOR TRACKING =====
-        document.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth) * 2 - 1;
-            const y = -(e.clientY / window.innerHeight) * 2 + 1;
-            motionState.cursorPos.x = x;
-            motionState.cursorPos.y = y;
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            new EarthExperience();
         });
 
-        // ===== ANIMATION LOOP =====
-        let lastTime = Date.now();
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const now = Date.now();
-            lastTime = now;
-
-            // Update scroll-based camera targets
-            updateSceneFromScroll();
-
-            // Apply cursor influence (very subtle)
-            motionState.targetCameraPos.x = motionState.cursorPos.x * CONFIG.cursorInfluence;
-            motionState.targetCameraPos.y = motionState.cursorPos.y * CONFIG.cursorInfluence;
-
-            // ===== 3-LAYER MOTION SYSTEM =====
-            lerpVec3(motionState.currentCameraPos, motionState.targetCameraPos, CONFIG.motionSmoothing);
-            lerpVec2(motionState.currentCameraRot, motionState.targetCameraRot, CONFIG.motionSmoothing);
-
-            // Apply camera
-            camera.position.copy(motionState.currentCameraPos);
-            camera.rotation.order = 'YXZ';
-            camera.rotation.x = motionState.currentCameraRot.x;
-            camera.rotation.y = motionState.currentCameraRot.y;
-            camera.lookAt(earth.position);
-
-            // Update Earth rotation smoothly
-            lerpVec2(motionState.currentEarthRot, motionState.targetEarthRot, CONFIG.motionSmoothing);
-            earth.rotation.y = motionState.currentEarthRot.y;
-            earth.rotation.x = motionState.currentEarthRot.x * 0.3;
-
-            // Update network opacity
-            networkNodes.children.forEach(child => {
-                if (child.material && child.material.opacity !== undefined) {
-                    child.material.opacity = lerp(child.material.opacity, motionState.networkOpacity * 0.2, CONFIG.motionSmoothing);
-                }
-            });
-
-            // Subtle background star parallax
-            stars.rotation.x += 0.00001;
-            stars.rotation.y += 0.000008;
-
-            // Render scene
-            renderer.render(scene, camera);
+        // Fallback if already loaded
+        if (document.readyState === 'complete') {
+            new EarthExperience();
         }
-
-        // ===== RESIZE HANDLER =====
-        window.addEventListener('resize', () => {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-
-            renderer.setSize(width, height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        });
-
-        // Start animation loop
-        animate();
     </script>
 </body>
 </html>
